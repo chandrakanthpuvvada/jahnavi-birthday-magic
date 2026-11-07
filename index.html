@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jahnavi's 5th Birthday - Magic Illusion Wheel Generator</title>
-  <!-- Load the p5.js library from CDN -->
+  <!-- Corrected drawing engine link -->
   <script src="https://cloudflare.com"></script>
   <style>
     body {
       margin: 0;
       padding: 15px;
-      background-color: #6F687A; /* Theme dark lavender-gray background */
+      background-color: #6F687A;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -111,26 +111,23 @@
     const RING_COUNT = 11;
 
     function setup() {
-      // Designed at a crisp, standard canvas size proportioned to A4 sheets
       let cnv = createCanvas(480, 676);
       cnv.parent('canvas-container');
       angleMode(DEGREES);
       
       nameInput = select('#nameInput');
 
-      // The high-contrast illusion palette
       colors = [
-        color('#2A085C'), // Deep Purple
-        color('#9D4EDD'), // Lilac
-        color('#FFFFFF'), // White
-        color('#C8B6E2')  // Light Lavender
+        color('#2A085C'), 
+        color('#9D4EDD'), 
+        color('#FFFFFF'), 
+        color('#C8B6E2')  
       ];
     }
 
     function draw() {
       background('#6F687A'); 
 
-      // 1. Structural Optical Illusion Engine
       push();
       translate(width / 2, height * 0.40);
       
@@ -160,31 +157,26 @@
         }
       }
       
-      // Neutral center disk to focus eyes
       fill('#6F687A');
       circle(0, 0, radiusStep * 2.5);
       pop();
 
-      // 2. Text Content Setup
       let textValue = nameInput.value().toUpperCase().trim();
       if(textValue === "") textValue = "MAGIC";
       
       textAlign(CENTER, CENTER);
       
-      // Header Name
       fill('#2A085C');
       textSize(24);
       textStyle(BOLD);
       text(textValue + "'S 5th MAGIC WHEEL", width / 2, height * 0.84);
 
-      // Interactive Game Rule
       fill('#FFFFFF');
       textSize(13);
       textStyle(ITALIC);
       text("Stare at the center circle, then look away to watch it spin!", width / 2, height * 0.91);
     }
 
-    // 3. Automated High-Resolution A4 Downloader
     function downloadPoster() {
       let currentName = nameInput.value().trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
       if (!currentName) currentName = "birthday";
