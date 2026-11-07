@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jahnavi's 5th Birthday - Magic Illusion Wheel Generator</title>
+  <!-- Load the p5.js library from CDN -->
+  <script src="https://cloudflare.com"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 15px;
+      background-color: #6F687A; /* Theme dark lavender-gray background */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', sans-serif;
+      color: white;
+      text-align: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .header-container {
+      margin-bottom: 15px;
+    }
+    h1 {
+      margin: 0 0 5px 0;
+      font-size: 26px;
+      color: #FFF;
+      text-shadow: 2px 2px 0px #2A085C;
+    }
+    p {
+      margin: 0;
+      font-size: 15px;
+      color: #E2D9F3;
+    }
+    .controls {
+      background: rgba(42, 8, 92, 0.4);
+      padding: 12px 20px;
+      border-radius: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      border: 2px dashed #C8B6E2;
+      width: 100%;
+      max-width: 460px;
+      box-sizing: border-box;
+    }
+    input[type="text"] {
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 2px solid #9D4EDD;
+      border-radius: 25px;
+      outline: none;
+      width: 180px;
+      font-weight: bold;
+      text-align: center;
+      color: #2A085C;
+    }
+    button {
+      padding: 10px 22px;
+      font-size: 16px;
+      background-color: #9D4EDD;
+      color: white;
+      border: 2px solid #FFFFFF;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    button:hover {
+      background-color: #2A085C;
+      transform: scale(1.05);
+    }
+    #canvas-container {
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #6F687A;
+      max-width: 100%;
+    }
+    canvas {
+      display: block;
+      max-width: 100% !important;
+      height: auto !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <h1>✨ Jahnavi's Magic Party Wheel! ✨</h1>
+    <p>Type your name, watch it spin in your eyes, and print your gift!</p>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="nameInput" value="JAHNAVI" placeholder="Your Name..." maxlength="15">
+    <button onclick="downloadPoster()">Save Poster 🖨️</button>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    let nameInput;
+    let colors = [];
+    const NUM_WEDGES = 56;
+    const RING_COUNT = 11;
+
+    function setup() {
+      // Designed at a crisp, standard canvas size proportioned to A4 sheets
+      let cnv = createCanvas(480, 676);
+      cnv.parent('canvas-container');
+      angleMode(DEGREES);
+      
+      nameInput = select('#nameInput');
+
+      // The high-contrast illusion palette
+      colors = [
+        color('#2A085C'), // Deep Purple
+        color('#9D4EDD'), // Lilac
+        color('#FFFFFF'), // White
+        color('#C8B6E2')  // Light Lavender
+      ];
+    }
+
+    function draw() {
+      background('#6F687A'); 
+
+      // 1. Structural Optical Illusion Engine
+      push();
+      translate(width / 2, height * 0.40);
+      
+      let maxRadius = width * 0.43;
+      let radiusStep = maxRadius / RING_COUNT;
+      let angleStep = 360 / NUM_WEDGES;
+
+      for (let r = RING_COUNT; r > 1; r--) {
+        let outerRadius = r * radiusStep;
+        let innerRadius = (r - 1) * radiusStep;
+        let shift = r % 3;
+
+        for (let i = 0; i < NUM_WEDGES; i++) {
+          let startAngle = i * angleStep;
+          let endAngle = (i + 1) * angleStep;
+
+          let colIndex = (i + shift) % 4;
+          fill(colors[colIndex]);
+          noStroke();
+
+          beginShape();
+          vertex(cos(startAngle) * innerRadius, sin(startAngle) * innerRadius);
+          vertex(cos(startAngle) * outerRadius, sin(startAngle) * outerRadius);
+          vertex(cos(endAngle) * outerRadius, sin(endAngle) * outerRadius);
+          vertex(cos(endAngle) * innerRadius, sin(endAngle) * innerRadius);
+          endShape(CLOSE);
+        }
+      }
+      
+      // Neutral center disk to focus eyes
+      fill('#6F687A');
+      circle(0, 0, radiusStep * 2.5);
+      pop();
+
+      // 2. Text Content Setup
+      let textValue = nameInput.value().toUpperCase().trim();
+      if(textValue === "") textValue = "MAGIC";
+      
+      textAlign(CENTER, CENTER);
+      
+      // Header Name
+      fill('#2A085C');
+      textSize(24);
+      textStyle(BOLD);
+      text(textValue + "'S 5th MAGIC WHEEL", width / 2, height * 0.84);
+
+      // Interactive Game Rule
+      fill('#FFFFFF');
+      textSize(13);
+      textStyle(ITALIC);
+      text("Stare at the center circle, then look away to watch it spin!", width / 2, height * 0.91);
+    }
+
+    // 3. Automated High-Resolution A4 Downloader
+    function downloadPoster() {
+      let currentName = nameInput.value().trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+      if (!currentName) currentName = "birthday";
+      saveCanvas(currentName + '_5th_birthday_illusion', 'png');
+    }
+  </script>
+</body>
+</html>
