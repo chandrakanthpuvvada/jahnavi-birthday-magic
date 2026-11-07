@@ -36,10 +36,10 @@
     }
     .controls {
       background: rgba(42, 8, 92, 0.4);
-      padding: 12px 20px;
+      padding: 15px 20px;
       border-radius: 20px;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 12px;
       justify-content: center;
       align-items: center;
@@ -48,6 +48,13 @@
       width: 100%;
       max-width: 460px;
       box-sizing: border-box;
+    }
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
     }
     input[type="text"] {
       padding: 10px 15px;
@@ -76,6 +83,20 @@
       background-color: #2A085C;
       transform: scale(1.05);
     }
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #E2D9F3;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-container input {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+    }
     #canvas-container {
       box-shadow: 0 15px 35px rgba(0,0,0,0.4);
       border-radius: 12px;
@@ -98,15 +119,23 @@
   </div>
 
   <div class="controls">
-    <input type="text" id="nameInput" value="JAHNAVI" placeholder="Your Name..." maxlength="15">
-    <button onclick="downloadPoster()">Save Poster 🖨️</button>
+    <div class="input-row">
+      <input type="text" id="nameInput" value="JAHNAVI" placeholder="Your Name..." maxlength="15">
+      <button onclick="downloadPoster()">Save Poster 🖨️</button>
+    </div>
+    <label class="toggle-container">
+      <input type="checkbox" id="noRenderCheck">
+      <span>Turn off screen rendering (Hides wheel on screen, but still saves perfectly!)</span>
+    </label>
   </div>
 
   <div id="canvas-container"></div>
 
   <script>
     let nameInput;
+    let noRenderCheck;
     let colors = [];
+    let isSaving = false;
     const NUM_WEDGES = 56;
     const RING_COUNT = 11;
 
@@ -116,6 +145,7 @@
       angleMode(DEGREES);
       
       nameInput = select('#nameInput');
+      noRenderCheck = select('#noRenderCheck');
 
       colors = [
         color('#2A085C'), 
@@ -128,39 +158,51 @@
     function draw() {
       background('#6F687A'); 
 
-      push();
-      translate(width / 2, height * 0.40);
-      
-      let maxRadius = width * 0.43;
-      let radiusStep = maxRadius / RING_COUNT;
-      let angleStep = 360 / NUM_WEDGES;
+      // Only draw the optical illusion wheel if "No Render" is unchecked, OR if we are exporting the file right now
+      if (!noRenderCheck.checked() || isSaving) {
+        push();
+        translate(width / 2, height * 0.40);
+        
+        let maxRadius = width * 0.43;
+        let radiusStep = maxRadius / RING_COUNT;
+        let angleStep = 360 / NUM_WEDGES;
 
-      for (let r = RING_COUNT; r > 1; r--) {
-        let outerRadius = r * radiusStep;
-        let innerRadius = (r - 1) * radiusStep;
-        let shift = r % 3;
+        for (let r = RING_COUNT; r > 1; r--) {
+          let outerRadius = r * radiusStep;
+          let innerRadius = (r - 1) * radiusStep;
+          let shift = r % 3;
 
-        for (let i = 0; i < NUM_WEDGES; i++) {
-          let startAngle = i * angleStep;
-          let endAngle = (i + 1) * angleStep;
+          for (let i = 0; i < NUM_WEDGES; i++) {
+            let startAngle = i * angleStep;
+            let endAngle = (i + 1) * angleStep;
 
-          let colIndex = (i + shift) % 4;
-          fill(colors[colIndex]);
-          noStroke();
+            let colIndex = (i + shift) % 4;
+            fill(colors[colIndex]);
+            noStroke();
 
-          beginShape();
-          vertex(cos(startAngle) * innerRadius, sin(startAngle) * innerRadius);
-          vertex(cos(startAngle) * outerRadius, sin(startAngle) * outerRadius);
-          vertex(cos(endAngle) * outerRadius, sin(endAngle) * outerRadius);
-          vertex(cos(endAngle) * innerRadius, sin(endAngle) * innerRadius);
-          endShape(CLOSE);
+            beginShape();
+            vertex(cos(startAngle) * innerRadius, sin(startAngle) * innerRadius);
+            vertex(cos(startAngle) * outerRadius, sin(startAngle) * outerRadius);
+            vertex(cos(endAngle) * outerRadius, sin(endAngle) * outerRadius);
+            vertex(cos(endAngle) * innerRadius, sin(endAngle) * innerRadius);
+            endShape(CLOSE);
+          }
         }
+        
+        fill('#6F687A');
+        circle(0, 0, radiusStep * 2.5);
+        pop();
+      } else {
+        // Show a clean placeholder text on screen when rendering is turned off
+        push();
+        textAlign(CENTER, CENTER);
+        fill('rgba(255, 255, 255, 0.3)');
+        textSize(16);
+        text("[ Illusion Wheel Hidden - Click Save to Download Entire Poster ]", width / 2, height * 0.40);
+        pop();
       }
-      
-      fill('#6F687A');
-      circle(0, 0, radiusStep * 2.5);
-      pop();
 
+      // Always draw the name and text fields
       let textValue = nameInput.value().toUpperCase().trim();
       if(textValue === "") textValue = "MAGIC";
       
@@ -174,13 +216,25 @@
       fill('#FFFFFF');
       textSize(13);
       textStyle(ITALIC);
-      text("Stare at the center circle, then look away to watch it spin!", width / 2, height * 0.91);
+      if (!noRenderCheck.checked()) {
+        text("Stare at the center circle, then look away to watch it spin!", width / 2, height * 0.91);
+      } else {
+        text("Rendering disabled on screen. Ready for immediate download!", width / 2, height * 0.91);
+      }
     }
 
     function downloadPoster() {
+      // Force engine to render the full pattern frame for a single cycle during file capture
+      isSaving = true;
+      redraw(); 
+      
       let currentName = nameInput.value().trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
       if (!currentName) currentName = "birthday";
+      
       saveCanvas(currentName + '_5th_birthday_illusion', 'png');
+      
+      // Instantly restore background screen hide mode after saving
+      isSaving = false;
     }
   </script>
 </body>
